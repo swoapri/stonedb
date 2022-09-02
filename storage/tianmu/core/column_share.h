@@ -96,6 +96,12 @@ class ColumnShare final {
     return i;
   }
 
+  static common::PackType GetPackType(ColumnType type, common::CT attr_type) {
+    return (type.IsLookup() || ATI::IsInteger32Type(attr_type) || ATI::IsDateTimeType(attr_type) || 
+      attr_type == common::CT::BIGINT || attr_type == common::CT::FLOAT || attr_type == common::CT::REAL)
+        ? common::PackType::INT : common::PackType::STR;
+  }
+
  private:
   void Init(common::TX_ID xid);
   void map_dpn();

@@ -457,7 +457,11 @@ types::RCValueObject RCAttr::GetValue(int64_t obj, bool lookup_to_num) {
       rcbs.null = false;
       ret = rcbs;
     } else if (ATI::IsIntegerType(a_type))
-      ret = types::RCNum(GetNotNullValueInt64(obj), -1, false, a_type);
+      if (ATI::IsDecimalType(a_type)) 
+        ret = types::RCDecimal(GetNotNullValueString(obj), m_share->ColType().GetScale(), 
+          m_share->ColType().GetPrecision(), m_share->ColType().GetTypeName());
+      else 
+        ret = types::RCNum(GetNotNullValueInt64(obj), -1, false, a_type);
     else if (a_type == common::CT::TIMESTAMP) {
       // needs to convert UTC/GMT time stored on server to time zone of client
       types::BString s = GetValueString(obj);
@@ -489,6 +493,9 @@ types::RCDataType &RCAttr::GetValueData(size_t obj, types::RCDataType &value, bo
       ((types::BString &)value) = types::BString(NULL, tmp_size, true);
       GetValueBin(obj, tmp_size, ((types::BString &)value).val);
       value.null = false;
+    } else if (ATI::IsDecimalType(a_type)) {
+      ((types::RCDecimal&)value).Assign(GetNotNullValueString(obj), m_share->ColType().GetScale(),
+      m_share->ColType().GetPrecision(), TypeName());
     } else if (ATI::IsIntegerType(a_type))
       ((types::RCNum &)value).Assign(GetNotNullValueInt64(obj), -1, false, a_type);
     else if (ATI::IsDateTimeType(a_type)) {

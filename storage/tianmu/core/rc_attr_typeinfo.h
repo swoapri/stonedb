@@ -74,6 +74,11 @@ class ATI {
     return attr_type == common::CT::TIME_N || attr_type == common::CT::DATETIME_N ||
            attr_type == common::CT::TIMESTAMP_N;
   }
+
+  static bool IsDecimalType(common::CT attr_type) {
+    return attr_type == common::CT::NUM;
+  }
+  
 };
 
 class AttributeTypeInfo {

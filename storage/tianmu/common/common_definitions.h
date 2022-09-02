@@ -80,6 +80,12 @@ constexpr double MINUS_INF_DBL = DBL_MAX * -1;
 constexpr int64_t PLUS_INF_64 = 0x7FFFFFFFFFFFFFFFULL;
 constexpr int64_t MINUS_INF_64 = 0x8000000000000000ULL;
 constexpr int64_t NULL_VALUE_64 = 0x8000000000000001ULL;
+
+const tianmu_int128_t PLUS_INF_128 = std::numeric_limits<tianmu_int128_t>::max();
+const tianmu_int128_t MINUS_INF_128 = std::numeric_limits<tianmu_int128_t>::min();
+const tianmu_int128_t NULL_VALUE_128 = MINUS_INF_128 + 1;
+constexpr int32_t MAX_DEC_PRECISION = 32;
+
 constexpr int32_t NULL_VALUE_32 = 0x80000000;
 constexpr short NULL_VALUE_SH = -32768;
 constexpr char NULL_VALUE_C = -128;

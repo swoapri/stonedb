@@ -93,10 +93,8 @@ void ColumnShare::read_meta() {
   ct.SetScale(meta.scale);
 
   auto type = ct.GetTypeName();
-  if (ct.IsLookup() || ATI::IsNumericType(type) || ATI::IsDateTimeType(type))
-    pt = common::PackType::INT;
-  else
-    pt = common::PackType::STR;
+  // decimal : modify the decimal storage type to packstr
+  pt = GetPackType(ct, type);
 
   if (pt == common::PackType::INT) {
     has_filter_hist = true;

@@ -40,6 +40,7 @@
 #include "system/rc_system.h"
 #include "types/rc_data_types.h"
 #include "types/rc_num.h"
+#include "types/rc_decimal.h"
 #include "util/fs.h"
 
 namespace Tianmu {
@@ -346,9 +347,11 @@ class RCAttr final : public mm::TraceableObject, public PhysicalColumn, public P
   void EvaluatePack_Like(MIUpdatingIterator &mit, int dim, Descriptor &d);
   void EvaluatePack_Like_UTF(MIUpdatingIterator &mit, int dim, Descriptor &d);
   void EvaluatePack_InString(MIUpdatingIterator &mit, int dim, Descriptor &d);
+  void EvaluatePack_InDecimal(MIUpdatingIterator &mit, int dim, Descriptor &d);
   void EvaluatePack_InString_UTF(MIUpdatingIterator &mit, int dim, Descriptor &d);
   void EvaluatePack_InNum(MIUpdatingIterator &mit, int dim, Descriptor &d);
   void EvaluatePack_BetweenString(MIUpdatingIterator &mit, int dim, Descriptor &d);
+  void EvaluatePack_BetweenDecimal(MIUpdatingIterator &mit, int dim, Descriptor &d);
   void EvaluatePack_BetweenString_UTF(MIUpdatingIterator &mit, int dim, Descriptor &d);
   void EvaluatePack_BetweenInt(MIUpdatingIterator &mit, int dim, Descriptor &d);
   void EvaluatePack_BetweenReal(MIUpdatingIterator &mit, int dim, Descriptor &d);
