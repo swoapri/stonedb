@@ -1150,6 +1150,7 @@ class DelayedInsertParser final {
         }
         auto &attr(attrs[i]);
         switch (attr->GetPackType()) {
+          case common::PackType::DEC:
           case common::PackType::STR: {
             uint32_t len = *(uint32_t *)ptr;
             ptr += sizeof(uint32_t);

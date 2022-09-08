@@ -102,8 +102,12 @@ class AttributeTypeInfo {
   }
   common::CT Type() const { return attrt; }
   common::PackType GetPackType() const {
-    return ATI::IsDateTimeType(attrt) || ATI::IsNumericType(attrt) || Lookup() ? common::PackType::INT
-                                                                               : common::PackType::STR;
+    if (ATI::IsDateTimeType(attrt) || ATI::IsNumericType(attrt) || Lookup() )
+      return common::PackType::INT;
+    else if (ATI::IsDecimalType(attrt)) 
+      return common::PackType::DEC;
+    else
+      return common::PackType::STR;
   }
   uint Precision() const { return precision; }
   ushort Scale() const { return scale; }

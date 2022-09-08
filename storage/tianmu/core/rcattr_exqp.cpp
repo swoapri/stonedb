@@ -24,6 +24,7 @@
 #include "core/cq_term.h"
 #include "core/pack_guardian.h"
 #include "core/pack_str.h"
+#include "core/pack_dec.h"
 #include "core/rc_attr.h"
 #include "core/rc_attr_typeinfo.h"
 #include "core/tools.h"
@@ -64,12 +65,12 @@ void RCAttr::EvaluatePack(MIUpdatingIterator &mit, int dim, Descriptor &d) {
       EvaluatePack_BetweenReal(mit, dim, d);
   } else if (GetPackType() == common::PackType::STR &&
              (d.op == common::Operator::O_BETWEEN || d.op == common::Operator::O_NOT_BETWEEN)) {
-    if (!ATI::IsDecimalType(TypeName())) {
-      if (types::RequiresUTFConversions(d.GetCollation()))
-        EvaluatePack_BetweenString_UTF(mit, dim, d);
-      else
-        EvaluatePack_BetweenString(mit, dim, d);
-    } else 
+    if (types::RequiresUTFConversions(d.GetCollation()))
+      EvaluatePack_BetweenString_UTF(mit, dim, d);
+    else
+      EvaluatePack_BetweenString(mit, dim, d);
+  } else if (GetPackType() == common::PackType::DEC &&
+             (d.op == common::Operator::O_BETWEEN || d.op == common::Operator::O_NOT_BETWEEN)) {
       EvaluatePack_BetweenDecimal(mit, dim, d);
   } else if (d.op == common::Operator::O_LIKE || d.op == common::Operator::O_NOT_LIKE) {
     if (types::RequiresUTFConversions(d.GetCollation()))
@@ -78,13 +79,13 @@ void RCAttr::EvaluatePack(MIUpdatingIterator &mit, int dim, Descriptor &d) {
       EvaluatePack_Like(mit, dim, d);
   } else if (GetPackType() == common::PackType::STR &&
              (d.op == common::Operator::O_IN || d.op == common::Operator::O_NOT_IN)) {
-    if (!ATI::IsDecimalType(TypeName())) {
-      if (types::RequiresUTFConversions(d.GetCollation()))
-        EvaluatePack_InString_UTF(mit, dim, d);
-      else
-        EvaluatePack_InString(mit, dim, d);
-    } else 
-      EvaluatePack_InDecimal(mit, dim, d);
+    if (types::RequiresUTFConversions(d.GetCollation()))
+      EvaluatePack_InString_UTF(mit, dim, d);
+    else
+      EvaluatePack_InString(mit, dim, d);
+  } else if (GetPackType() == common::PackType::DEC &&
+             (d.op == common::Operator::O_IN || d.op == common::Operator::O_NOT_IN)) {
+    EvaluatePack_InDecimal(mit, dim, d);
   } else if (GetPackType() == common::PackType::INT &&
              (d.op == common::Operator::O_IN || d.op == common::Operator::O_NOT_IN))
     EvaluatePack_InNum(mit, dim, d);

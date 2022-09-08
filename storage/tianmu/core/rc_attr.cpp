@@ -24,6 +24,7 @@
 #include "core/dpn.h"
 #include "core/pack_int.h"
 #include "core/pack_str.h"
+#include "core/pack_dec.h"
 #include "core/rc_attr.h"
 #include "core/rc_attr_typeinfo.h"
 #include "core/tools.h"
@@ -378,6 +379,15 @@ types::BString RCAttr::GetValueString(const int64_t obj) {
 
     return cur_pack->GetValueBinary(offset);
   }
+
+  if (GetPackType() == common::PackType::DEC) {
+    auto const &dpn(get_dpn(pack));
+    if (dpn.Trivial())  // no pack data
+      return types::BString();
+    DEBUG_ASSERT(get_pack(pack)->IsLocked());
+    auto cur_pack = get_packD(pack);
+    return cur_pack->GetValueBinary(offset);
+  }
   int64_t v = GetValueInt64(obj);
   return DecodeValue_S(v);
 }
@@ -388,6 +398,12 @@ types::BString RCAttr::GetNotNullValueString(const int64_t obj) {
 
   if (GetPackType() == common::PackType::STR) {
     auto cur_pack = get_packS(pack);
+    ASSERT(cur_pack != NULL, "Pack ptr is null");
+    ASSERT(cur_pack->IsLocked(), "Access unlocked pack");
+    return cur_pack->GetValueBinary(offset);
+  }
+  if (GetPackType() == common::PackType::DEC) {
+    auto cur_pack = get_packD(pack);
     ASSERT(cur_pack != NULL, "Pack ptr is null");
     ASSERT(cur_pack->IsLocked(), "Access unlocked pack");
     return cur_pack->GetValueBinary(offset);
@@ -416,7 +432,7 @@ void RCAttr::GetValueBin(int64_t obj, size_t &size, char *val_buf) {
       return;
     } else {  // no dictionary
       if (dpn.Trivial()) return;
-      auto p = get_packS(pack);
+      auto p = get_packS(pack);  
       DEBUG_ASSERT(p->IsLocked());
       types::BString v(p->GetValueBinary(offset));
       size = v.size();
@@ -430,7 +446,7 @@ void RCAttr::GetValueBin(int64_t obj, size_t &size, char *val_buf) {
     *(int *)val_buf = int(v);
     val_buf[4] = 0;
     return;
-  } else if (a_type == common::CT::NUM || a_type == common::CT::BIGINT || ATI::IsRealType(a_type) ||
+  } else if (a_type == common::CT::BIGINT || ATI::IsRealType(a_type) ||
              ATI::IsDateTimeType(a_type)) {
     size = 8;
     int64_t v = GetValueInt64(obj);
@@ -438,6 +454,14 @@ void RCAttr::GetValueBin(int64_t obj, size_t &size, char *val_buf) {
     *(int64_t *)(val_buf) = v;
     val_buf[8] = 0;
     return;
+  } else if (a_type == common::CT::NUM) {
+      if (dpn.Trivial()) return;
+      auto p = get_packD(pack);  
+      DEBUG_ASSERT(p->IsLocked());
+      types::BString v(p->GetValueBinary(offset));
+      size = v.size();
+      v.CopyTo(val_buf, size);
+      return;
   }
   return;
 }
@@ -798,6 +822,7 @@ void RCAttr::Release() { Collapse(); }
 std::shared_ptr<Pack> RCAttr::Fetch(const PackCoordinate &pc) {
   auto dpn = m_share->get_dpn_ptr(pc_dp(pc));
   if (GetPackType() == common::PackType::STR) return std::make_shared<PackStr>(dpn, pc, m_share);
+  if (GetPackType() == common::PackType::DEC) return std::make_shared<PackDec>(dpn, pc, m_share);
   return std::make_shared<PackInt>(dpn, pc, m_share);
 }
 
@@ -829,6 +854,10 @@ void RCAttr::LoadData(loader::ValueCache *nvs, Transaction *conn_info) {
       break;
     case common::PackType::STR: {
       LoadDataPackS(pi, nvs);
+      break;
+    }
+    case common::PackType::DEC: {
+      LoadDataPackD(pi, nvs);
       break;
     }
     default:
@@ -940,6 +969,28 @@ void RCAttr::LoadDataPackS(size_t pi, loader::ValueCache *nvs) {
   }
 
   get_packS(pi)->LoadValues(nvs);
+}
+
+void RCAttr::LoadDataPackD(size_t pi, loader::ValueCache *nvs) {
+  auto &dpn(get_dpn(pi));
+
+  auto load_nulls = Type().NotNull() ? 0 : nvs->NumOfNulls();
+  auto cnt = nvs->NumOfValues();
+
+  // no need to store any values - uniform package
+  if (load_nulls == cnt && (dpn.nr == 0 || dpn.NullOnly())) {
+    dpn.nr += cnt;
+    dpn.nn += cnt;
+    return;
+  }
+
+  // new package or expanding so-far-null package
+  if (dpn.nr == 0 || dpn.NullOnly()) {
+    auto sp = rceng->cache.GetOrFetchObject<Pack>(get_pc(pi), this);
+    dpn.SetPackPtr(reinterpret_cast<unsigned long>(sp.get()) + tag_one);
+  }
+
+  get_packD(pi)->LoadValues(nvs);
 }
 
 void RCAttr::UpdateData(uint64_t row, Value &v) {
@@ -1236,7 +1287,7 @@ void RCAttr::UpdateIfIndex(uint64_t row, uint64_t col, const Value &v) {
 
   if (!v.HasValue()) throw common::Exception("primary key not support null!");
 
-  if (GetPackType() == common::PackType::STR) {
+  if (GetPackType() == common::PackType::STR || GetPackType() == common::PackType::DEC) {
     auto &vnew = v.GetString();
     auto vold = GetValueString(row);
     std::string_view nkey(vnew.data(), vnew.length());
