@@ -127,7 +127,7 @@ types::RCValueObject ConstColumn::GetValueImpl([[maybe_unused]] const core::MIIt
     value.GetRCDecimal(rcdc);
     return rcdc;
   }
-  if (lookup_to_num || TypeName() == common::CT::NUM) return types::RCNum((int64_t)value.Get64(), Type().GetScale());
+  if (lookup_to_num) return types::RCNum((int64_t)value.Get64(), Type().GetScale());
   DEBUG_ASSERT(!"Illegal execution path");
   return types::RCValueObject();
 }

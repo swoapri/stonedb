@@ -125,7 +125,7 @@ union DT {
   }
 };
 
-enum class ValueTypeEnum { NULL_TYPE, DATE_TIME_TYPE, NUMERIC_TYPE, STRING_TYPE };
+enum class ValueTypeEnum { NULL_TYPE, DATE_TIME_TYPE, NUMERIC_TYPE, DECIMAL_TYPE, STRING_TYPE };
 
 class RCDataType {
  public:

@@ -787,7 +787,7 @@ void RCAttr::EvaluatePack_BetweenDecimal(MIUpdatingIterator &mit, int dim, Descr
     return;
   }
 
-  auto p = get_packS(pack);
+  auto p = get_packD(pack);
   if (p == NULL) {  // => nulls only
     mit.ResetCurrentPack();
     mit.NextPackrow();
@@ -809,8 +809,9 @@ void RCAttr::EvaluatePack_BetweenDecimal(MIUpdatingIterator &mit, int dim, Descr
     }
   }
 
-  types::RCDecimal dv1 = *dynamic_cast<types::RCDecimal*>(d.val1.vc->GetValue(mit).Get());
-  types::RCDecimal dv2 = *dynamic_cast<types::RCDecimal*>(d.val2.vc->GetValue(mit).Get());
+  types::RCDecimal dv1, dv2;
+  dv1 = *(d.val1.vc->GetValue(mit).Get());
+  dv2 = *(d.val2.vc->GetValue(mit).Get());
 
   do {
     int inpack = mit.GetCurInpack(dim);  // row number inside the pack

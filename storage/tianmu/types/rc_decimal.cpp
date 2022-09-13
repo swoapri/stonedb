@@ -25,6 +25,8 @@
 #include "types/rc_data_types.h"
 #include "types/value_parser4txt.h"
 
+#include "types/rc_num.h"
+
 namespace Tianmu {
 namespace types {
 
@@ -59,6 +61,18 @@ RCDecimal &RCDecimal::Assign(BString value, short scale, short precision, common
   return *this;
 }
 
+RCDecimal &RCDecimal::Assign(int64_t value, short scale, short precision, common::CT attrt) {
+  common::tianmu_int128_t t = value;
+  this->value_ = t;
+  this->scale_ = scale;
+  this->precision_ = precision;
+  this->attr_type_ = attrt;
+
+  if (scale <= -1) scale_ = 0;
+  null = (value_ == common::NULL_VALUE_128 ? true : false);
+  return *this;
+}
+
 common::ErrorCode RCDecimal::Parse(const BString &rcs, RCDecimal &rcn, uint precision, ushort scale, common::CT at) {
   // parse decimal from text
   return ValueParserForText::ParseDecimal(rcs, rcn, precision, scale);
@@ -77,10 +91,34 @@ RCDecimal &RCDecimal::operator=(const RCDecimal &rcn) {
   return *this;
 }
 
+RCDecimal &RCDecimal::operator=(const RCValueObject &rvo) {
+  const RCDataType& rcdt = *(rvo.Get());
+  if (rcdt.GetValueType() == ValueTypeEnum::NUMERIC_TYPE) {
+    RCNum& rcn = (RCNum&)rcdt;        
+    RCNum rcn1 = rcn.ToDecimal();
+    this->Assign(rcn1.ValueInt(), rcn1.Scale(), RCNum::MAX_DEC_PRECISION, common::CT::NUM);
+  } else if (rcdt.GetValueType() == ValueTypeEnum::DECIMAL_TYPE) {
+    *this = (RCDecimal&)rcdt;
+  } else {
+    RCDecimal rcn1;
+    if (common::IsError(RCDecimal::Parse(rcdt.ToBString(), rcn1, precision_, scale_, this->attr_type_))) {
+      *this = rcn1;
+    } else {
+      TIANMU_ERROR("Unsupported assign operation!");
+      null = true;
+    }
+  }
+  return *this;
+}
+
 RCDecimal &RCDecimal::operator=(const RCDataType &rcdt) {
-  if (rcdt.GetValueType() == ValueTypeEnum::NUMERIC_TYPE)
-    *this = (RCDecimal &)rcdt;
-  else {
+  if (rcdt.GetValueType() == ValueTypeEnum::NUMERIC_TYPE) {
+    RCNum& rcn = (RCNum&)rcdt;        
+    RCNum rcn1 = rcn.ToDecimal();
+    this->Assign(rcn1.ValueInt(), rcn1.Scale(), RCNum::MAX_DEC_PRECISION, common::CT::NUM);
+  } else if (rcdt.GetValueType() == ValueTypeEnum::DECIMAL_TYPE) {
+    *this = (RCDecimal&)rcdt;
+  } else {
     RCDecimal rcn1;
     if (common::IsError(RCDecimal::Parse(rcdt.ToBString(), rcn1, precision_, scale_, this->attr_type_))) {
       *this = rcn1;
@@ -210,7 +248,12 @@ bool RCDecimal::operator>(const RCDataType &rcdt) const {
 
 bool RCDecimal::operator<=(const RCDataType &rcdt) const {
   if (IsNull() || rcdt.IsNull()) return false;
-  if (rcdt.GetValueType() == ValueTypeEnum::NUMERIC_TYPE) return (compare((RCDecimal &)rcdt) <= 0);
+  if (rcdt.GetValueType() == ValueTypeEnum::DECIMAL_TYPE) return (compare((RCDecimal &)rcdt) <= 0);
+  if (rcdt.GetValueType() == ValueTypeEnum::NUMERIC_TYPE) {
+    RCDecimal rcdc;
+    rcdc = (RCNum&)rcdt;
+    return (compare(rcdc) <= 0);
+  }
   if (rcdt.GetValueType() == ValueTypeEnum::DATE_TIME_TYPE) return (compare((RCDateTime &)rcdt) <= 0);
   if (rcdt.GetValueType() == ValueTypeEnum::STRING_TYPE) return (this->ToBString() <= rcdt);
   TIANMU_ERROR("Bad cast inside RCDecimal");
@@ -219,7 +262,12 @@ bool RCDecimal::operator<=(const RCDataType &rcdt) const {
 
 bool RCDecimal::operator>=(const RCDataType &rcdt) const {
   if (null || rcdt.IsNull()) return false;
-  if (rcdt.GetValueType() == ValueTypeEnum::NUMERIC_TYPE) return (compare((RCDecimal &)rcdt) >= 0);
+  if (rcdt.GetValueType() == ValueTypeEnum::DECIMAL_TYPE) return (compare((RCDecimal &)rcdt) >= 0);
+  if (rcdt.GetValueType() == ValueTypeEnum::NUMERIC_TYPE) {
+    RCDecimal rcdc;
+    rcdc = (RCNum&)rcdt;
+    return (compare(rcdc) >= 0);
+  }
   if (rcdt.GetValueType() == ValueTypeEnum::DATE_TIME_TYPE) return (compare((RCDateTime &)rcdt) >= 0);
   if (rcdt.GetValueType() == ValueTypeEnum::STRING_TYPE) return (this->ToBString() >= rcdt);
   TIANMU_ERROR("Bad cast inside RCDecimal");

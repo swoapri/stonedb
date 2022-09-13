@@ -249,11 +249,11 @@ void ConditionEncoder::TransformOtherThanINsOnDecimals() {
     // common::Operator::O_NOT_EQ_ANY processed on higher level
     if (desc->op == common::Operator::O_LESS_ANY || desc->op == common::Operator::O_LESS_EQ_ANY ||
         desc->op == common::Operator::O_MORE_ALL || desc->op == common::Operator::O_MORE_EQ_ALL)
-      rco1 = *dynamic_cast<types::RCDecimal*>(mvc->GetSetMin(mit).Get());
+      rco1 = *(mvc->GetSetMin(mit).Get());
     else                                     //	ANY && MORE or ALL && LESS
-      rco1 = *dynamic_cast<types::RCDecimal*>(mvc->GetSetMax(mit).Get());
+      rco1 = *(mvc->GetSetMax(mit).Get());
   } else if (desc->val1.vc->IsConst()) {
-      rco1 = *dynamic_cast<types::RCDecimal*>(desc->val1.vc->GetValue(mit).Get());
+      rco1 = *(desc->val1.vc->GetValue(mit).Get());
   }
 
   if (desc->val2.vc && (desc->val2.vc)->IsMultival()) {
@@ -261,13 +261,13 @@ void ConditionEncoder::TransformOtherThanINsOnDecimals() {
     PrepareValueSet(*mvc);
     // only for BETWEEN
     if (IsSetAnyOperator(desc->op))
-      rco2 = *dynamic_cast<types::RCDecimal*>(mvc->GetSetMax(mit).Get());
+      rco2 = *(mvc->GetSetMax(mit).Get());
     else
       //	ALL
-      rco2 = *dynamic_cast<types::RCDecimal*>(mvc->GetSetMin(mit).Get());
+      rco2 = *(mvc->GetSetMin(mit).Get());
   } else {
     if (!desc->val2.IsNull() && desc->val2.vc && desc->val2.vc->IsConst()) {
-      rco2 = *dynamic_cast<types::RCDecimal*>(mvc->GetValue(mit).Get());
+      rco2 = *(mvc->GetValue(mit).Get());
     } else
       rco2 = types::RCDecimal(common::NULL_VALUE_128, 
         attr->Type().GetScale(), 

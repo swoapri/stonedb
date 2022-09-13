@@ -498,7 +498,7 @@ types::RCValueObject RCAttr::GetValue(int64_t obj, bool lookup_to_num) {
       ret = types::RCDateTime(this->GetNotNullValueInt64(obj), a_type);
     else if (ATI::IsRealType(a_type))
       ret = types::RCNum(this->GetNotNullValueInt64(obj), 0, true, a_type);
-    else if (lookup_to_num || a_type == common::CT::NUM)
+    else if (lookup_to_num)
       ret = types::RCNum((int64_t)GetNotNullValueInt64(obj), Type().GetScale());
   }
   return ret;

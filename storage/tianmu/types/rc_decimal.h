@@ -34,9 +34,12 @@ class RCDecimal : public ValueBasic<RCDecimal> {
   RCDecimal(BString value, short scale = -1, short prec = -1, common::CT attrt = common::CT::UNK);
   RCDecimal(common::tianmu_int128_t value, short scale = -1, short prec = -1, common::CT attrt = common::CT::UNK);
   RCDecimal(const RCDecimal &);
+  RCDecimal(const RCDataType &rcn);
+
   ~RCDecimal();
 
   RCDecimal &Assign(BString value, short scale = -1, short prec = -1, common::CT attrt = common::CT::UNK);
+  RCDecimal &Assign(int64_t value, short scale = -1, short prec = -1, common::CT attrt = common::CT::UNK);
 
   static common::ErrorCode Parse(const BString &rcs, RCDecimal &rcn, 
                       uint precision, ushort scale, common::CT at = common::CT::UNK);
@@ -44,6 +47,7 @@ class RCDecimal : public ValueBasic<RCDecimal> {
   static common::ErrorCode ParseReal(const BString &, RCDecimal &rcdc, common::CT at = common::CT::UNK);
 
   RCDecimal &operator=(const RCDecimal &rcn);
+  RCDecimal &operator=(const RCValueObject &rcdt);
   RCDecimal &operator=(const RCDataType &rcdt) override;
 
   common::CT Type() const override;
@@ -93,6 +97,8 @@ class RCDecimal : public ValueBasic<RCDecimal> {
   uint GetHashCode() const override;
   void Negate();
 
+  static constexpr int MAX_DEC_PRECISION = 32;
+
  private:
   int compare(const RCDecimal& rcn) const;
   int compare(const RCDateTime &rcn) const;
@@ -102,10 +108,9 @@ class RCDecimal : public ValueBasic<RCDecimal> {
   ushort scale_;  // means 'scale' actually
   ushort precision_; // means 'precision' actually
   common::CT attr_type_;
-  static constexpr int MAX_DEC_PRECISION = 32;
 
  public:
-  const static ValueTypeEnum value_type = ValueTypeEnum::NUMERIC_TYPE;
+  const static ValueTypeEnum value_type = ValueTypeEnum::DECIMAL_TYPE;
 };
 
 }  // namespace types
