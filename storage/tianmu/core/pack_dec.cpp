@@ -180,7 +180,7 @@ void PackDec::WriteInt128ToVec(common::tianmu_int128_t v, char* arr) {
   bool sign;
   ConvertBStringToBinChar(str, vec, sign);
   std::memset(arr, 0, MAX_DPN_S);
-  for (int i=0; i<vec.size(); i++) {
+  for (size_t i=0; i<vec.size(); i++) {
     arr[i] = vec[i];
   }
   if (sign) arr[MAX_DPN_S-1] |= 0x80;
